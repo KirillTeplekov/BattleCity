@@ -1,14 +1,15 @@
 import os
 import sys
 import pygame
-from gameObject import Tile
+from gameObject import *
 
 pygame.init()
 
 # Constants 
 FPS = 30
 
-width = height = 960 
+width = 928
+height = 896
 screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
 
@@ -32,18 +33,11 @@ def load_image(name, colorkey=None):
 
 # Image dict for gameObject 
 tile_images = {'brick': load_image('tiles/brick.png', -1), 'empty': load_image('tiles/empty_block.png'), 'concrete': load_image('tiles/concrete.png'),
-               'bushes': load_image('tiles/bushes.png'), 'ice': load_image('tiles/ice.png'), 'water': load_image('tiles/water.png')}
+               'bushes': load_image('tiles/bushes.png'), 'ice': load_image('tiles/ice.png')}
 enemy_images = {}
-
-# Game's group
-all_sprites = pygame.sprite.Group()
-enemy_group = pygame.sprite.Group()
-tiles_group = pygame.sprite.Group()
-player_group = pygame.sprite.Group()
 
 # Function, which read level from text file and generate this level
 def generate_level(filename):
-    
     # Read level
     filename = "data/levels/" + filename
     mapFile = open(filename, 'r')
@@ -72,7 +66,13 @@ def generate_level(filename):
             elif level[y][x] == '@':
                 Tile(tiles_image['empty'], x, y)
                 player = Player(x, y)
-    
+
+# Create borders for game's board    
+Border(32, 32, 32, 864)
+Border(32, 32, 863, 32)
+Border(864, 32, 864, 864)
+Border(32, 864, 864, 864, 864)
+
 # Main game's loop
 running = True
 
