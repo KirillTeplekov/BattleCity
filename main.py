@@ -13,8 +13,6 @@ height = 896
 screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
 
-player = None
-
 # Function, which load image to sprite
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
@@ -34,7 +32,30 @@ def load_image(name, colorkey=None):
 # Image dict for gameObject 
 tile_images = {'brick': load_image('tiles/brick.png', -1), 'empty': load_image('tiles/empty_block.png'), 'concrete': load_image('tiles/concrete.png'),
                'bushes': load_image('tiles/bushes.png'), 'ice': load_image('tiles/ice.png')}
-enemy_images = {}
+player_lvl1 = {'lvl1_up': load_image('tanks/player/lvl1/up.png'), 'lvl1_down': load_image('tanks/player/lvl1/down.png'),
+               'lvl1_left': load_image('tanks/player/lvl1/left.png'), 'lvl1_right': load_image('tanks/player/lvl1/right.png')}
+player_lvl2 = {'lvl2_up': load_image('tanks/player/lvl2/up.png'), 'lvl2_down': load_image('tanks/player/lvl2/down.png'),
+               'lvl2_left': load_image('tanks/player/lvl2/left.png'), 'lvl2_right': load_image('tanks/player/lvl2/right.png')}
+player_lvl3 = {'lvl3_up': load_image('tanks/player/lvl3/up.png'), 'lvl3_down': load_image('tanks/player/lvl3/down.png'),
+               'lvl3_left': load_image('tanks/player/lv3/left.png'), 'lvl3_right': load_image('tanks/player/lvl3/right.png')}
+
+class Players(Tanks):
+    def __init__(self, posx, posy):
+        super().__init__(None, posx, posy)
+        sell.lvl = 1
+        self.image = player_lvl1['lvl1_up']
+    
+    def update(self):
+        if self.up:
+            
+        elif self.down:
+            pass
+        elif self.left:
+            pass
+        elif self.right:
+            pass
+    
+player = None
 
 # Function, which read level from text file and generate this level
 def generate_level(filename):
@@ -52,19 +73,19 @@ def generate_level(filename):
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
-                Tile(tiles_image['empty'], x, y)
+                Tile(tiles_image['empty'], x, y, colide_group)
             elif level[y][x] == '#':
-                Tile(tiles_image['brick'], x, y)
+                Tile(tiles_image['brick'], x, y, colide_group)
             elif level[y][x] == 'c':
-                Tile(tiles_image['concrete'], x, y)
+                Tile(tiles_image['concrete'], x, y, colide_group)
             elif level[y][x] == 'w':
-                Tile(tiles_image['water'], x, y)
+                Tile(tiles_image['water'], x, y, colide_group)
             elif level[y][x] == 'i':
-                Tile(tiles_image['ice'], x, y)
+                Tile(tiles_image['ice'], x, y, uncolide_group)
             elif level[y][x] == 'b':
-                Tile(tiles_image['bushes'], x, y)                
+                Tile(tiles_image['bushes'], x, y, uncolide_group)
             elif level[y][x] == '@':
-                Tile(tiles_image['empty'], x, y)
+                Tile(tiles_image['empty'], x, y, colide_group)
                 player = Player(x, y)
 
 # Create borders for game's board    
