@@ -41,19 +41,19 @@ player_lvl3 = {'lvl3_up': load_image('tanks/player/lvl3/up.png'), 'lvl3_down': l
 
 class Players(Tanks):
     def __init__(self, posx, posy):
-        super().__init__(None, posx, posy)
+        super().__init__(player_lvl1['lvl1_up'], posx, posy)
         sell.lvl = 1
-        self.image = player_lvl1['lvl1_up']
     
     def update(self):
-        if self.up:
-            
-        elif self.down:
-            pass
-        elif self.left:
-            pass
-        elif self.right:
-            pass
+        if not(pygame.sprite.spritecollideany(self, colide_group)):
+            if self.up:
+                self.rect = self.move(-16, 0)
+            elif self.down:
+                self.rect = self.move(16, 0)
+            elif self.left:
+                self.rect = self.move(0, -16)
+            elif self.right:
+                self.rect = self.move(0, 16)
     
 player = None
 
@@ -103,14 +103,19 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
-                pass
-            if event.key == pygame.K_RIGHT:
-                pass
             if event.key == pygame.K_UP:
-                pass
-            if event.key == pygame.K_DOWN:
-                pass
+                player.up = True
+                player.update()
+            elif event.key == pygame.K_DOWN:
+                player.down = True
+                player.update()                            
+            elif event.key == pygame.K_LEFT:
+                player.down = True
+                player.update()                
+            elif event.key == pygame.K_RIGHT:
+                player.down = True
+                player.update()                
+            
 
     screen.fill(pygame.Color("grey"))
     
