@@ -32,28 +32,38 @@ def load_image(name, colorkey=None):
 # Image dict for gameObject 
 tile_images = {'brick': load_image('tiles/brick.png', -1), 'empty': load_image('tiles/empty_block.png'), 'concrete': load_image('tiles/concrete.png'),
                'bushes': load_image('tiles/bushes.png'), 'ice': load_image('tiles/ice.png')}
-player_lvl1 = {'lvl1_up': load_image('tanks/player/lvl1/up.png'), 'lvl1_down': load_image('tanks/player/lvl1/down.png'),
-               'lvl1_left': load_image('tanks/player/lvl1/left.png'), 'lvl1_right': load_image('tanks/player/lvl1/right.png')}
-player_lvl2 = {'lvl2_up': load_image('tanks/player/lvl2/up.png'), 'lvl2_down': load_image('tanks/player/lvl2/down.png'),
-               'lvl2_left': load_image('tanks/player/lvl2/left.png'), 'lvl2_right': load_image('tanks/player/lvl2/right.png')}
-player_lvl3 = {'lvl3_up': load_image('tanks/player/lvl3/up.png'), 'lvl3_down': load_image('tanks/player/lvl3/down.png'),
-               'lvl3_left': load_image('tanks/player/lv3/left.png'), 'lvl3_right': load_image('tanks/player/lvl3/right.png')}
 
-class Players(Tanks):
+player_images = {'lvl1_up': load_image(path_to_player + 'lvl1/up.png'), 'lvl1_down': load_image(path_to_player + 'lvl1/down.png'),
+               'lvl1_left': load_image(path_to_player + 'lvl1/left.png'), 'lvl1_right': load_image(path_to_player + 'lvl1/right.png'),
+               'lvl2_up': load_image(path_to_player + 'lvl2/up.png'), 'lvl2_down': load_image(path_to_player + 'lvl2/down.png'),
+               'lvl2_left': load_image(path_to_player + 'lvl2/left.png'), 'lvl2_right': load_image(path_to_player + 'lvl2/right.png'),
+               'lvl3_up': load_image(path_to_player + 'lvl3/up.png'), 'lvl3_down': load_image(path_to_player + 'lvl3/down.png'),
+               'lvl3_left': load_image(path_to_player + 'lv3/left.png'), 'lvl3_right': load_image(path_to_player + 'lvl3/right.png')}
+
+enemy_images = {}
+
+class Player(Tanks):
     def __init__(self, posx, posy):
         super().__init__(player_lvl1['lvl1_up'], posx, posy)
-        sell.lvl = 1
-    
+        self.lvl = 1
+        self.speed = 8
+        self.movement = False
+        self.add(player_group)
+
     def update(self):
-        if not(pygame.sprite.spritecollideany(self, colide_group)):
-            if self.up:
-                self.rect = self.move(-16, 0)
-            elif self.down:
-                self.rect = self.move(16, 0)
-            elif self.left:
-                self.rect = self.move(0, -16)
-            elif self.right:
-                self.rect = self.move(0, 16)
+        if self.movement and not(pygame.sprite.spritecollideany(self, colide_group)):
+            if self.direction == 'u':
+                self.image = player_lvl1['lvl1_up']
+                self.rect = self.rect.move(0, -self.speed)
+            elif self.direction == 'd':
+                self.image = player_lvl1['lvl1_down']
+                self.rect = self.rect.move(0, self.speed)
+            elif self.direction == 'l':
+                self.image = player_lvl1['lvl1_left']                
+                self.rect = self.rect.move(-self.speed, 0)
+            elif self.direction == 'r':
+                self.image = player_lvl1['lvl1_right']
+                self.rect = self.rect.move(self.speed, 0)
     
 player = None
 
@@ -73,20 +83,24 @@ def generate_level(filename):
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
-                Tile(tiles_image['empty'], x, y, colide_group)
+                Tile(tiles_image['empty'], x, y, collide_group)
             elif level[y][x] == '#':
-                Tile(tiles_image['brick'], x, y, colide_group)
+                Tile(tiles_image['brick'], x, y, collide_group)
             elif level[y][x] == 'c':
-                Tile(tiles_image['concrete'], x, y, colide_group)
+                Tile(tiles_image['concrete'], x, y, collide_group)
             elif level[y][x] == 'w':
-                Tile(tiles_image['water'], x, y, colide_group)
+                Water(tiles_image['water'], x, y)
             elif level[y][x] == 'i':
-                Tile(tiles_image['ice'], x, y, uncolide_group)
+                Tile(tiles_image['ice'], x, y, ice_group)
             elif level[y][x] == 'b':
-                Tile(tiles_image['bushes'], x, y, uncolide_group)
+                Bushes(tiles_image['bushes'], x, y)
             elif level[y][x] == '@':
-                Tile(tiles_image['empty'], x, y, colide_group)
+                Tile(tiles_image['empty'], x, y, collide_group)
                 player = Player(x, y)
+    
+    uncollide_group.add(bushes_group)
+    uncollide_group.add(ice_group)
+    collide_group.add(water_group)       
 
 # Create borders for game's board    
 Border(32, 32, 32, 864)
@@ -104,23 +118,36 @@ while running:
             running = False
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
-                player.up = True
-                player.update()
+                player.movement = True
+                player.direction = 'u'
             elif event.key == pygame.K_DOWN:
-                player.down = True
-                player.update()                            
+                player.movement = True
+                player.direction = 'd'                     
             elif event.key == pygame.K_LEFT:
-                player.down = True
-                player.update()                
+                player.movement = True
+                player.direction = 'l'
             elif event.key == pygame.K_RIGHT:
-                player.down = True
-                player.update()                
-            
+                player.movement = True
+                player.direction = 'r'         
+        elif event.type == pygame.KEYUP:
+            if event.key == pygame.K_UP:
+                player.movement = False            
+            elif event.key == pygame.K_DOWN:
+                player.movement = False
+            elif event.key == pygame.K_LEFT:
+                player.movement = False
+            elif event.key == pygame.K_RIGHT:
+                player.movement = False
+    player.update()
+
+    for sprite in water_group:
+        sprite.update()
 
     screen.fill(pygame.Color("grey"))
     
-    tiles_group.draw(screen)
+    collide_group.draw(screen)
     player_group.draw(screen)
+    uncollide_group(screen)
 
     pygame.display.flip()
 
