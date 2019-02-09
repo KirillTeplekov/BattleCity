@@ -38,31 +38,38 @@ player_images = {'lvl1_up': load_image(path_to_player + 'lvl1/up.png'), 'lvl1_do
                'lvl2_up': load_image(path_to_player + 'lvl2/up.png'), 'lvl2_down': load_image(path_to_player + 'lvl2/down.png'),
                'lvl2_left': load_image(path_to_player + 'lvl2/left.png'), 'lvl2_right': load_image(path_to_player + 'lvl2/right.png'),
                'lvl3_up': load_image(path_to_player + 'lvl3/up.png'), 'lvl3_down': load_image(path_to_player + 'lvl3/down.png'),
-               'lvl3_left': load_image(path_to_player + 'lv3/left.png'), 'lvl3_right': load_image(path_to_player + 'lvl3/right.png')}
+               'lvl3_left': load_image(path_to_player + 'lvl3/left.png'), 'lvl3_right': load_image(path_to_player + 'lvl3/right.png')}
 
-enemy_images = {}
+enemy_images = {}  
 
 class Player(Tanks):
     def __init__(self, posx, posy):
-        super().__init__(player_lvl1['lvl1_up'], posx, posy)
+        super().__init__(player_images['lvl1_up'], posx, posy)
+        self.atack = False
         self.lvl = 1
         self.speed = 8
         self.movement = False
         self.add(player_group)
-
+        self.atack_count = 30
+        
     def update(self):
-        if self.movement and not(pygame.sprite.spritecollideany(self, colide_group)):
+        if self.atack and self.atack_count >= 30:
+            bullet = Bullet('fast', self)
+            self.atack_count = 0
+        self.atack_count += 1
+        
+        if self.movement and not(pygame.sprite.spritecollideany(self, collide_group)):
             if self.direction == 'u':
-                self.image = player_lvl1['lvl1_up']
-                self.rect = self.rect.move(0, -self.speed)
+                self.image = player_images['lvl' + str(self.lvl) + '_up']
+                self.rect = self.rect.move(0, -self.speed) 
             elif self.direction == 'd':
-                self.image = player_lvl1['lvl1_down']
+                self.image = player_images['lvl' + str(self.lvl) + '_down']
                 self.rect = self.rect.move(0, self.speed)
             elif self.direction == 'l':
-                self.image = player_lvl1['lvl1_left']                
+                self.image = player_images['lvl' + str(self.lvl) + '_left']                
                 self.rect = self.rect.move(-self.speed, 0)
             elif self.direction == 'r':
-                self.image = player_lvl1['lvl1_right']
+                self.image = player_images['lvl' + str(self.lvl) + '_right']
                 self.rect = self.rect.move(self.speed, 0)
     
 player = None
@@ -83,19 +90,19 @@ def generate_level(filename):
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
-                Tile(tiles_image['empty'], x, y, collide_group)
+                Tile(tile_images['empty'], x, y, uncollide_group)
             elif level[y][x] == '#':
-                Tile(tiles_image['brick'], x, y, collide_group)
+                Tile(tile_images['brick'], x, y, collide_group)
             elif level[y][x] == 'c':
-                Tile(tiles_image['concrete'], x, y, collide_group)
+                Tile(tile_images['concrete'], x, y, collide_group)
             elif level[y][x] == 'w':
-                Water(tiles_image['water'], x, y)
+                Water(x, y)
             elif level[y][x] == 'i':
-                Tile(tiles_image['ice'], x, y, ice_group)
+                Tile(tile_images['ice'], x, y, ice_group)
             elif level[y][x] == 'b':
-                Bushes(tiles_image['bushes'], x, y)
+                Bushes(tile_images['bushes'], x, y)
             elif level[y][x] == '@':
-                Tile(tiles_image['empty'], x, y, collide_group)
+                Tile(tile_images['empty'], x, y, uncollide_group)
                 player = Player(x, y)
     
     uncollide_group.add(bushes_group)
@@ -106,8 +113,8 @@ def generate_level(filename):
 Border(32, 32, 32, 864)
 Border(32, 32, 863, 32)
 Border(864, 32, 864, 864)
-Border(32, 864, 864, 864, 864)
-
+Border(32, 864, 864, 864)
+generate_level('level1.txt')
 # Main game's loop
 running = True
 
@@ -128,7 +135,10 @@ while running:
                 player.direction = 'l'
             elif event.key == pygame.K_RIGHT:
                 player.movement = True
-                player.direction = 'r'         
+                player.direction = 'r'    
+            elif event.key == pygame.K_SPACE:
+                player.atack = True
+        
         elif event.type == pygame.KEYUP:
             if event.key == pygame.K_UP:
                 player.movement = False            
@@ -138,16 +148,22 @@ while running:
                 player.movement = False
             elif event.key == pygame.K_RIGHT:
                 player.movement = False
+            elif event.key == pygame.K_SPACE:
+                player.atack = False
+                
     player.update()
-
+    for sprite in bullet_group:
+        sprite.update()
     for sprite in water_group:
         sprite.update()
 
     screen.fill(pygame.Color("grey"))
     
     collide_group.draw(screen)
+    uncollide_group.draw(screen)
+    
     player_group.draw(screen)
-    uncollide_group(screen)
+    bullet_group.draw(screen)
 
     pygame.display.flip()
 
