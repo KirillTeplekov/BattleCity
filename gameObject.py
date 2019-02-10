@@ -43,6 +43,7 @@ class Tile(pygame.sprite.Sprite):
         self.image = image
         self.rect = self.image.get_rect().move(tile_width * posx + x_indent,
                                                tile_height * posy + y_indent)
+        self.mask = pygame.mask.from_surface(self.image)
 
 
 class Water(Tile):
@@ -79,8 +80,6 @@ class Tanks(pygame.sprite.Sprite):
                                                tile_height * posy + y_indent)
 
         self.direction = ''  # 'u' - up, 'd' - down, 'l' - left, 'r' - r
-        self.stop = ''  # The direction in which it is forbidden to go
-
 
 class Enemy(Tanks):
     def __init__(self, type, posx, posy):
@@ -102,7 +101,7 @@ class Bullet(pygame.sprite.Sprite):
 
         self.direction = owner.direction
         self.image = Bullet.bullet_images[self.direction]
-
+        
         self.boom = 0
 
         if self.direction == 'u':
