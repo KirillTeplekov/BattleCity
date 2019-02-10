@@ -65,7 +65,6 @@ class Player(Tanks):
         self.movement = False
         self.add(player_group)
         self.atack_count = 30
-        self.last_collide_status = False
 
     def update(self):
         move_pos = (0, 0)
@@ -74,27 +73,39 @@ class Player(Tanks):
             bullet = Bullet('fast', self)
             self.atack_count = 0
         self.atack_count += 1
-
+                
         if self.movement:
+            self.rotate()
             if self.direction == 'u':
-                self.image = player_images['lvl' + str(self.lvl) + '_up']
-                move_pos = (0, -self.speed)
+                new_pos = (self.rect.x, self.rect.y - self.speed)
             elif self.direction == 'd':
-                self.image = player_images['lvl' + str(self.lvl) + '_down']
-                move_pos = (0, self.speed)
+                new_pos = (self.rect.x, self.rect.y + self.speed)
             elif self.direction == 'l':
-                self.image = player_images['lvl' + str(self.lvl) + '_left']
-                move_pos = (-self.speed, 0)
+                new_pos = (self.rect.x -self.speed, self.rect.y)
             elif self.direction == 'r':
-                self.image = player_images['lvl' + str(self.lvl) + '_right']
-                move_pos = (self.speed, 0)
+                new_pos = (self.rect.x + self.speed, self.rect.y)
+        
+            player_rect = pygame.Rect(new_pos, [64, 64])
 
-        if pygame.sprite.spritecollideany(self, collide_group):
-            return
-
-        # if no collision, move player
-        self.rect = self.rect.move(move_pos)
-
+            # collisions with tiles
+            if player_rect.collidelist(list(collide_group)) != -1:
+                return
+            
+            # if no collision, move player
+            self.rect.topleft = (new_pos)
+            
+    def rotate(self):
+        if self.direction == 'u':
+            self.image = player_images['lvl' + str(self.lvl) + '_up']
+        elif self.direction == 'd':
+            self.image = player_images['lvl' + str(self.lvl) + '_down']
+            self.stop = ''
+        elif self.direction == 'l':
+            self.image = player_images['lvl' + str(self.lvl) + '_left']
+            self.stop = ''
+        elif self.direction == 'r':
+            self.image = player_images['lvl' + str(self.lvl) + '_right']          
+            
 screen_images = [load_image('other/start_screen1.png'), load_image('other/start_screen2.png')]
 def start_screen():
     screen_num = 0
@@ -140,8 +151,7 @@ def start_screen():
         pygame.display.flip()        
     
     all_sprites.empty()
-
-start_screen()
+    
 player = None
 
 
@@ -186,7 +196,7 @@ Border(32, 32, 32, 864)
 Border(32, 32, 863, 32)
 Border(864, 32, 864, 864)
 Border(32, 864, 864, 864)
-generate_level('level1.txt')
+
 # Main game's loop
 running = True
 
