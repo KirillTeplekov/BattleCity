@@ -10,8 +10,10 @@ FPS = 30
 
 width = 928
 height = 896
+v = 456
 screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
+
 
 # Function, which load image to sprite
 def load_image(name, colorkey=None):
@@ -29,50 +31,119 @@ def load_image(name, colorkey=None):
         image.set_colorkey(colorkey)
     return image
 
-# Image dict for gameObject 
-tile_images = {'brick': load_image('tiles/brick.png', -1), 'empty': load_image('tiles/empty_block.png'), 'concrete': load_image('tiles/concrete.png'),
-               'bushes': load_image('tiles/bushes.png'), 'ice': load_image('tiles/ice.png')}
 
-player_images = {'lvl1_up': load_image(path_to_player + 'lvl1/up.png'), 'lvl1_down': load_image(path_to_player + 'lvl1/down.png'),
-               'lvl1_left': load_image(path_to_player + 'lvl1/left.png'), 'lvl1_right': load_image(path_to_player + 'lvl1/right.png'),
-               'lvl2_up': load_image(path_to_player + 'lvl2/up.png'), 'lvl2_down': load_image(path_to_player + 'lvl2/down.png'),
-               'lvl2_left': load_image(path_to_player + 'lvl2/left.png'), 'lvl2_right': load_image(path_to_player + 'lvl2/right.png'),
-               'lvl3_up': load_image(path_to_player + 'lvl3/up.png'), 'lvl3_down': load_image(path_to_player + 'lvl3/down.png'),
-               'lvl3_left': load_image(path_to_player + 'lvl3/left.png'), 'lvl3_right': load_image(path_to_player + 'lvl3/right.png')}
+# Image dict for gameObject
+tile_images = {'brick': load_image('tiles/brick.png', -1),
+               'empty': load_image('tiles/empty_block.png'),
+               'concrete': load_image('tiles/concrete.png'),
+               'bushes': load_image('tiles/bushes.png'),
+               'ice': load_image('tiles/ice.png')}
 
-enemy_images = {}  
+player_images = {'lvl1_up': load_image(path_to_player + 'lvl1/up.png'),
+                 'lvl1_down': load_image(path_to_player + 'lvl1/down.png'),
+                 'lvl1_left': load_image(path_to_player + 'lvl1/left.png'),
+                 'lvl1_right': load_image(path_to_player + 'lvl1/right.png'),
+                 'lvl2_up': load_image(path_to_player + 'lvl2/up.png'),
+                 'lvl2_down': load_image(path_to_player + 'lvl2/down.png'),
+                 'lvl2_left': load_image(path_to_player + 'lvl2/left.png'),
+                 'lvl2_right': load_image(path_to_player + 'lvl2/right.png'),
+                 'lvl3_up': load_image(path_to_player + 'lvl3/up.png'),
+                 'lvl3_down': load_image(path_to_player + 'lvl3/down.png'),
+                 'lvl3_left': load_image(path_to_player + 'lvl3/left.png'),
+                 'lvl3_right': load_image(path_to_player + 'lvl3/right.png')}
+
+enemy_images = {}
+
 
 class Player(Tanks):
     def __init__(self, posx, posy):
         super().__init__(player_images['lvl1_up'], posx, posy)
+        self.direction = 'u'
         self.atack = False
         self.lvl = 1
         self.speed = 8
         self.movement = False
         self.add(player_group)
         self.atack_count = 30
-        
+        self.last_collide_status = False
+
     def update(self):
+        move_pos = (0, 0)
+
         if self.atack and self.atack_count >= 30:
             bullet = Bullet('fast', self)
             self.atack_count = 0
         self.atack_count += 1
-        
-        if self.movement and not(pygame.sprite.spritecollideany(self, collide_group)):
+
+        if self.movement:
             if self.direction == 'u':
                 self.image = player_images['lvl' + str(self.lvl) + '_up']
-                self.rect = self.rect.move(0, -self.speed) 
+                move_pos = (0, -self.speed)
             elif self.direction == 'd':
                 self.image = player_images['lvl' + str(self.lvl) + '_down']
-                self.rect = self.rect.move(0, self.speed)
+                move_pos = (0, self.speed)
             elif self.direction == 'l':
-                self.image = player_images['lvl' + str(self.lvl) + '_left']                
-                self.rect = self.rect.move(-self.speed, 0)
+                self.image = player_images['lvl' + str(self.lvl) + '_left']
+                move_pos = (-self.speed, 0)
             elif self.direction == 'r':
                 self.image = player_images['lvl' + str(self.lvl) + '_right']
-                self.rect = self.rect.move(self.speed, 0)
+                move_pos = (self.speed, 0)
+
+        if pygame.sprite.spritecollideany(self, collide_group):
+            return
+
+        # if no collision, move player
+        self.rect = self.rect.move(move_pos)
+
+screen_images = [load_image('other/start_screen1.png'), load_image('other/start_screen2.png')]
+def start_screen():
+    screen_num = 0
+    sprite = pygame.sprite.Sprite()
+    sprite.image = screen_images[screen_num]
+    sprite.rect = sprite.image.get_rect()
+    all_sprites.add(sprite)
+    sprite.rect.x = 0
+    sprite.rect.y = height
     
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        if sprite.rect.y >= 0:
+            screen.fill(pygame.Color('black'))
+            sprite.rect = sprite.rect.move(0, -(v // 60))
+            all_sprites.draw(screen)
+        else:
+            running = False
+        clock.tick(60)
+        pygame.display.flip()
+        
+        
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    print(screen_num)
+                    screen_num = (screen_num + 1) % 2
+                    print(screen_num)
+                    sprite.image = screen_images[screen_num]
+                elif event.key == pygame.K_DOWN:
+                    screen_num = (screen_num + 1) % 2
+                    sprite.image = screen_images[screen_num]
+                    
+        clock.tick(60)
+        all_sprites.draw(screen)
+        pygame.display.flip()        
+    
+    all_sprites.empty()
+
+start_screen()
 player = None
+
 
 # Function, which read level from text file and generate this level
 def generate_level(filename):
@@ -81,10 +152,10 @@ def generate_level(filename):
     mapFile = open(filename, 'r')
     level = mapFile.readlines()
     mapFile.close()
-    
+
     for i in range(len(level)):
         level[i] = level[i].rstrip('\r\n')
-    
+
     # Generate level
     global player
     for y in range(len(level)):
@@ -104,10 +175,11 @@ def generate_level(filename):
             elif level[y][x] == '@':
                 Tile(tile_images['empty'], x, y, uncollide_group)
                 player = Player(x, y)
-    
+
     uncollide_group.add(bushes_group)
     uncollide_group.add(ice_group)
-    collide_group.add(water_group)       
+    collide_group.add(water_group)
+
 
 # Create borders for game's board    
 Border(32, 32, 32, 864)
@@ -119,7 +191,7 @@ generate_level('level1.txt')
 running = True
 
 while running:
-    
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -129,19 +201,19 @@ while running:
                 player.direction = 'u'
             elif event.key == pygame.K_DOWN:
                 player.movement = True
-                player.direction = 'd'                     
+                player.direction = 'd'
             elif event.key == pygame.K_LEFT:
                 player.movement = True
                 player.direction = 'l'
             elif event.key == pygame.K_RIGHT:
                 player.movement = True
-                player.direction = 'r'    
+                player.direction = 'r'
             elif event.key == pygame.K_SPACE:
                 player.atack = True
-        
+
         elif event.type == pygame.KEYUP:
             if event.key == pygame.K_UP:
-                player.movement = False            
+                player.movement = False
             elif event.key == pygame.K_DOWN:
                 player.movement = False
             elif event.key == pygame.K_LEFT:
@@ -150,7 +222,7 @@ while running:
                 player.movement = False
             elif event.key == pygame.K_SPACE:
                 player.atack = False
-                
+
     player.update()
     for sprite in bullet_group:
         sprite.update()
@@ -158,10 +230,10 @@ while running:
         sprite.update()
 
     screen.fill(pygame.Color("grey"))
-    
+
     collide_group.draw(screen)
     uncollide_group.draw(screen)
-    
+
     player_group.draw(screen)
     bullet_group.draw(screen)
 
