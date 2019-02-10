@@ -1,5 +1,14 @@
-.#cwib.#cwib.#cwib.#cwib.#cwib.#cwib
-.#cwib.#cwib.#cwib.#cwib.#cwib.#cwib
-.#cwib.#cwib.#cwib.#cwib.#cwib.#cwib
-.#cwib.#cwib.#cwib.#cwib.#cwib.#cwib.#cwib
-.#cwib.#cwib.#cwib.#cwib.#cwib.#cwib
+.............
+.............
+.....@.......
+.............
+.............
+bbbbbbbbbbbbb
+bbbbbbbbbbbbb
+bbbbbbbbbbbbb
+ccccccccc..ww
+ccccccccc..ww
+ccccccccc..ww
+ccccccccc..bb
+bbbbbbbbbbbbb
+2 2 2 4
