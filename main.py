@@ -181,7 +181,7 @@ def generate_level(filename):
             elif level[y][x] == 'i':
                 Tile(tile_images['ice'], x, y, ice_group)
             elif level[y][x] == 'b':
-                Bushes(tile_images['bushes'], x, y)
+                Bushes(tile_images['bushes'], x, y, uncollide_group)
             elif level[y][x] == '@':
                 Tile(tile_images['empty'], x, y, uncollide_group)
                 player = Player(x, y)
@@ -189,7 +189,6 @@ def generate_level(filename):
     uncollide_group.add(bushes_group)
     uncollide_group.add(ice_group)
     collide_group.add(water_group)
-
 
 # Create borders for game's board    
 Border(32, 32, 32, 864)
