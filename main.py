@@ -5,7 +5,7 @@ from gameObject import *
 
 pygame.init()
 
-# Constants 
+# Constants
 FPS = 30
 
 width = 928
@@ -32,81 +32,10 @@ def load_image(name, colorkey=None):
     return image
 
 
-# Image dict for gameObject
-tile_images = {'brick': load_image('tiles/brick.png', -1),
-               'empty': load_image('tiles/empty_block.png'),
-               'concrete': load_image('tiles/concrete.png'),
-               'bushes': load_image('tiles/bushes.png'),
-               'ice': load_image('tiles/ice.png')}
-
-player_images = {'lvl1_up': load_image(path_to_player + 'lvl1/up.png'),
-                 'lvl1_down': load_image(path_to_player + 'lvl1/down.png'),
-                 'lvl1_left': load_image(path_to_player + 'lvl1/left.png'),
-                 'lvl1_right': load_image(path_to_player + 'lvl1/right.png'),
-                 'lvl2_up': load_image(path_to_player + 'lvl2/up.png'),
-                 'lvl2_down': load_image(path_to_player + 'lvl2/down.png'),
-                 'lvl2_left': load_image(path_to_player + 'lvl2/left.png'),
-                 'lvl2_right': load_image(path_to_player + 'lvl2/right.png'),
-                 'lvl3_up': load_image(path_to_player + 'lvl3/up.png'),
-                 'lvl3_down': load_image(path_to_player + 'lvl3/down.png'),
-                 'lvl3_left': load_image(path_to_player + 'lvl3/left.png'),
-                 'lvl3_right': load_image(path_to_player + 'lvl3/right.png')}
-
-enemy_images = {}
+screen_images = [load_image('other/start_screen1.png'),
+                 load_image('other/start_screen2.png')]
 
 
-class Player(Tanks):
-    def __init__(self, posx, posy):
-        super().__init__(player_images['lvl1_up'], posx, posy)
-        self.direction = 'u'
-        self.atack = False
-        self.lvl = 1
-        self.speed = 8
-        self.movement = False
-        self.add(player_group)
-        self.atack_count = 30
-
-    def update(self):
-        move_pos = (0, 0)
-
-        if self.atack and self.atack_count >= 30:
-            bullet = Bullet('fast', self)
-            self.atack_count = 0
-        self.atack_count += 1
-                
-        if self.movement:
-            self.rotate()
-            if self.direction == 'u':
-                new_pos = (self.rect.x, self.rect.y - self.speed)
-            elif self.direction == 'd':
-                new_pos = (self.rect.x, self.rect.y + self.speed)
-            elif self.direction == 'l':
-                new_pos = (self.rect.x -self.speed, self.rect.y)
-            elif self.direction == 'r':
-                new_pos = (self.rect.x + self.speed, self.rect.y)
-        
-            player_rect = pygame.Rect(new_pos, [64, 64])
-
-            # collisions with tiles
-            if player_rect.collidelist(list(collide_group)) != -1:
-                return
-            
-            # if no collision, move player
-            self.rect.topleft = (new_pos)
-            
-    def rotate(self):
-        if self.direction == 'u':
-            self.image = player_images['lvl' + str(self.lvl) + '_up']
-        elif self.direction == 'd':
-            self.image = player_images['lvl' + str(self.lvl) + '_down']
-            self.stop = ''
-        elif self.direction == 'l':
-            self.image = player_images['lvl' + str(self.lvl) + '_left']
-            self.stop = ''
-        elif self.direction == 'r':
-            self.image = player_images['lvl' + str(self.lvl) + '_right']          
-            
-screen_images = [load_image('other/start_screen1.png'), load_image('other/start_screen2.png')]
 def start_screen():
     screen_num = 0
     sprite = pygame.sprite.Sprite()
@@ -115,7 +44,7 @@ def start_screen():
     all_sprites.add(sprite)
     sprite.rect.x = 0
     sprite.rect.y = height
-    
+
     running = True
     while running:
         for event in pygame.event.get():
@@ -129,8 +58,7 @@ def start_screen():
             running = False
         clock.tick(60)
         pygame.display.flip()
-        
-        
+
     running = True
     while running:
         for event in pygame.event.get():
@@ -145,14 +73,20 @@ def start_screen():
                 elif event.key == pygame.K_DOWN:
                     screen_num = (screen_num + 1) % 2
                     sprite.image = screen_images[screen_num]
-                    
+
         clock.tick(60)
         all_sprites.draw(screen)
-        pygame.display.flip()        
-    
+        pygame.display.flip()
+
     all_sprites.empty()
-    
+
+
+def game_over():
+    pass
+
+
 player = None
+castle_flag = None
 
 
 # Function, which read level from text file and generate this level
@@ -168,12 +102,14 @@ def generate_level(filename):
 
     # Generate level
     global player
-    for y in range(len(level)):
-        for x in range(len(level[y])):
+    global castle_flag
+    for y in range(13):
+        for x in range(13):
             if level[y][x] == '.':
                 Tile(tile_images['empty'], x, y, uncollide_group)
             elif level[y][x] == '#':
-                Tile(tile_images['brick'], x, y, collide_group)
+
+                Brick(x, y)
             elif level[y][x] == 'c':
                 Tile(tile_images['concrete'], x, y, collide_group)
             elif level[y][x] == 'w':
@@ -181,71 +117,115 @@ def generate_level(filename):
             elif level[y][x] == 'i':
                 Tile(tile_images['ice'], x, y, ice_group)
             elif level[y][x] == 'b':
-                Bushes(tile_images['bushes'], x, y, uncollide_group)
+                Tile(tile_images['bushes'], x, y, bushes_group)
+            elif level[y][x] == 'F':
+                castle_flag = Flag(x, y)
             elif level[y][x] == '@':
                 Tile(tile_images['empty'], x, y, uncollide_group)
                 player = Player(x, y)
-
     uncollide_group.add(bushes_group)
     uncollide_group.add(ice_group)
-    collide_group.add(water_group)
+    collide_group.add(brick_group)
+    return level[13]
 
-# Create borders for game's board    
-Border(32, 32, 32, 864)
-Border(32, 32, 863, 32)
-Border(864, 32, 864, 864)
-Border(32, 864, 864, 864)
 
-# Main game's loop
-running = True
+if __name__ == "__main__":
+    # Create borders for game's board
+    Border(0, 0, width, x_indent, 'h')
+    Border(0, 0, y_indent, height, 'v')
+    Border(x_indent, height - y_indent, width, x_indent, 'h')
+    Border(tile_width * 13 + x_indent, 0, y_indent, height, 'v')
 
-while running:
+    enemy_count = generate_level('level1.txt').split()
+    tank_count = []
+    for i in range(int(enemy_count[0])):
+        tank_count.append('standard')
+    for i in range(int(enemy_count[1])):
+        tank_count.append('btr')
+    for i in range(int(enemy_count[0])):
+        tank_count.append('rapidfire')
+    for i in range(int(enemy_count[0])):
+        tank_count.append('heavy')
+    enemy_on_lvl = int(enemy_count[0]) + int(enemy_count[1]) + int(
+        enemy_count[2]) + int(enemy_count[3])
+    enemy_on_board = 0
+    respawn_timer = 120
+    # Main game's loop
+    running = True
+    while running:
+        if enemy_on_board <= 4 and respawn_timer >= 120:
+            type = tank_count.pop(tank_count.index(choice(tank_count)))
+            Enemy(type)
+            enemy_on_board += 1
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP:
-                player.movement = True
-                player.direction = 'u'
-            elif event.key == pygame.K_DOWN:
-                player.movement = True
-                player.direction = 'd'
-            elif event.key == pygame.K_LEFT:
-                player.movement = True
-                player.direction = 'l'
-            elif event.key == pygame.K_RIGHT:
-                player.movement = True
-                player.direction = 'r'
-            elif event.key == pygame.K_SPACE:
-                player.atack = True
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    player.movement = True
+                    player.direction = 'u'
+                elif event.key == pygame.K_DOWN:
+                    player.movement = True
+                    player.direction = 'd'
+                elif event.key == pygame.K_LEFT:
+                    player.movement = True
+                    player.direction = 'l'
+                elif event.key == pygame.K_RIGHT:
+                    player.movement = True
+                    player.direction = 'r'
+                elif event.key == pygame.K_SPACE:
+                    player.atack = True
 
-        elif event.type == pygame.KEYUP:
-            if event.key == pygame.K_UP:
-                player.movement = False
-            elif event.key == pygame.K_DOWN:
-                player.movement = False
-            elif event.key == pygame.K_LEFT:
-                player.movement = False
-            elif event.key == pygame.K_RIGHT:
-                player.movement = False
-            elif event.key == pygame.K_SPACE:
-                player.atack = False
+            elif event.type == pygame.KEYUP:
+                if event.key == pygame.K_UP:
+                    player.movement = False
+                elif event.key == pygame.K_DOWN:
+                    player.movement = False
+                elif event.key == pygame.K_LEFT:
+                    player.movement = False
+                elif event.key == pygame.K_RIGHT:
+                    player.movement = False
+                elif event.key == pygame.K_SPACE:
+                    player.atack = False
 
-    player.update()
-    for sprite in bullet_group:
-        sprite.update()
-    for sprite in water_group:
-        sprite.update()
+        player.update()
+        castle_flag.update()
+        bullet_group.add(bullet_player_group)
+        bullet_group.add(bullet_enemy_group)
+        for water in water_group:
+            water.update()
 
-    screen.fill(pygame.Color("grey"))
+        for bullet in bullet_player_group:
+            bullet.update()
 
-    collide_group.draw(screen)
-    uncollide_group.draw(screen)
+        for bullet in bullet_enemy_group:
+            bullet.update()
 
-    player_group.draw(screen)
-    bullet_group.draw(screen)
+        for boom in boom_group:
+            boom.update()
 
-    pygame.display.flip()
+        for brick in brick_group:
+            brick.update()
 
-    clock.tick(FPS)
+        for enemy in enemy_group:
+            enemy.update()
+
+        screen.fill(pygame.Color("grey"))
+        screen.fill(pygame.Color('black'),
+                    pygame.Rect(x_indent, y_indent, tile_width * 13,
+                                tile_height * 13))
+
+        collide_group.draw(screen)
+        uncollide_group.draw(screen)
+        water_group.draw(screen)
+        player_group.draw(screen)
+        enemy_group.draw(screen)
+        bullet_enemy_group.draw(screen)
+        bullet_player_group.draw(screen)
+        bushes_group.draw(screen)
+        boom_group.draw(screen)
+
+        pygame.display.flip()
+
+        clock.tick(FPS)
