@@ -62,20 +62,20 @@ enemy_images = {'btr': {'btr_u': load_image(path_to_enemy + 'btr/up.png'),
                     'heavy_r': load_image(path_to_enemy + 'heavy/right.png')},
                 'rapidfire': {'rapidfire_u': load_image(
                     path_to_enemy + 'rapidfire/up.png'),
-                              'rapidfire_d': load_image(
-                                  path_to_enemy + 'rapidfire/down.png'),
-                              'rapidfire_l': load_image(
-                                  path_to_enemy + 'rapidfire/left.png'),
-                              'rapidfire_r': load_image(
-                                  path_to_enemy + 'rapidfire/right.png')},
+                    'rapidfire_d': load_image(
+                        path_to_enemy + 'rapidfire/down.png'),
+                    'rapidfire_l': load_image(
+                        path_to_enemy + 'rapidfire/left.png'),
+                    'rapidfire_r': load_image(
+                        path_to_enemy + 'rapidfire/right.png')},
                 'standard': {'standard_u': load_image(
                     path_to_enemy + 'standard/up.png'),
-                             'standard_d': load_image(
-                                 path_to_enemy + 'standard/down.png'),
-                             'standard_l': load_image(
-                                 path_to_enemy + 'standard/left.png'),
-                             'standard_r': load_image(
-                                 path_to_enemy + 'standard/right.png')}}
+                    'standard_d': load_image(
+                        path_to_enemy + 'standard/down.png'),
+                    'standard_l': load_image(
+                        path_to_enemy + 'standard/left.png'),
+                    'standard_r': load_image(
+                        path_to_enemy + 'standard/right.png')}}
 
 
 class Border(pygame.sprite.Sprite):
@@ -120,6 +120,19 @@ class Water(Tile):
             self.index = 0
 
 
+class Flag(Tile):
+    flag_on = load_image('other/flag_on.png')
+    flag_off = load_image('other/flag_off.png')
+
+    def __init__(self, posx, posy):
+        super().__init__(Flag.flag_on, posx, posy, collide_group)
+
+    def update(self):
+        if pygame.sprite.spritecollideany(self, bullet_group):
+            self.image = Flag.flag_off
+            game_over()
+
+
 class Brick(Tile):
     brick_images = {'brick_0': load_image('tiles/brick_1.png'),
                     'brick_1': load_image('tiles/brick_2.png'),
@@ -150,13 +163,14 @@ class Tanks(pygame.sprite.Sprite):
         self.image = image
         self.rect = self.image.get_rect().move(tile_width * posx + x_indent,
                                                tile_height * posy + y_indent)
-
+        self.hp = 0
         self.direction = ''  # 'u' - up, 'd' - down, 'l' - left, 'r' - r
 
 
 class Player(Tanks):
     def __init__(self, posx, posy):
         super().__init__(player_images['lvl1_up'], posx, posy)
+        self.hp = 3
         self.direction = 'u'
         self.atack = False
         self.lvl = 1
@@ -247,19 +261,24 @@ class Enemy(Tanks):
             new_pos = (self.rect.x + self.speed, self.rect.y)
 
         enemy_rect = pygame.Rect(new_pos, [64, 64])
-        
+
         if enemy_rect.collidelist(list(bullet_player_group)) != -1:
             for bullet in bullet_player_group:
                 if pygame.sprite.collide_rect(self, bullet):
                     bullet.boom()
             self.hp -= 1
-        
+
         if self.hp == 0:
-            self.kill()        
-        
-        # collisions with tiles
+            self.kill()
+
+            # collisions with others object
         if enemy_rect.collidelist(list(collide_group)) != -1:
             return
+        if enemy_rect.collidelist(list(player_group)) != -1:
+            return
+        for enemy in enemy_group:
+            if self != enemy and enemy_rect.colliderect(enemy.rect):
+                return
 
         # if no collision, move player
         self.rect.topleft = (new_pos)
