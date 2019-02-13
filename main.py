@@ -4,6 +4,7 @@ import pygame
 from gameObject import *
 
 pygame.init()
+pygame.mixer.init()
 
 # Constants
 FPS = 30
@@ -14,6 +15,15 @@ v = 456
 screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
 
+# Music
+background = pygame.mixer.Sound('data/sounds/background.ogg')
+steel = pygame.mixer.Sound('data/sounds/steel.ogg')
+brick = pygame.mixer.Sound('data/sounds/brick.ogg')
+bonus = pygame.mixer.Sound('data/sounds/bonus.ogg')
+explosion = pygame.mixer.Sound('data/sounds/explosion.ogg')
+fire = pygame.mixer.Sound('data/sounds/fire.ogg')
+gameover = pygame.mixer.Sound('data/sounds/gameover.ogg')
+gamestart = pygame.mixer.Sound('data/sounds/gamestart.ogg')
 
 # Function, which load image to sprite
 def load_image(name, colorkey=None):
@@ -72,11 +82,14 @@ def start_screen():
                 terminate()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
+                    steel.play()
                     screen_num = (screen_num + 1) % 2
                 elif event.key == pygame.K_DOWN:
+                    steel.play()
                     screen_num = (screen_num + 1) % 2
                 sprite.image = screen_images[screen_num]
                 if event.key == pygame.K_SPACE:
+                    steel.play()
                     return True
         clock.tick(60)
         all_sprites.draw(screen)
@@ -140,7 +153,9 @@ def game_over():
     fon_sprites.add(sprite)
     sprite.rect.x = 0
     sprite.rect.y = height
-
+    
+    gameover.set_volume(1)
+    gameover.play()
     running = True
     while running:
         for event in pygame.event.get():
@@ -261,6 +276,8 @@ if __name__ == "__main__":
         levels = start_screen()
         level_num = 0
         while levels:
+            gamestart.set_volume(1)
+            gamestart.play()
             # Create borders for game's board
             Border(0, 0, width, x_indent, 'h')
             Border(0, 0, y_indent, height, 'v')
@@ -288,6 +305,8 @@ if __name__ == "__main__":
 
             level = True
             while level:
+                background.set_volume(0.1)
+                background.play()
                 if pause:
                     state = pause_screen()
                     if state:
@@ -331,6 +350,8 @@ if __name__ == "__main__":
                                 player.movement = True
                                 player.direction = 'r'
                             elif event.key == pygame.K_SPACE:
+                                fire.set_volume(1)
+                                fire.play()                                
                                 player.atack = True
                             elif event.key == pygame.K_ESCAPE:
                                 pause = True
