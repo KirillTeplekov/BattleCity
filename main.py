@@ -5,7 +5,7 @@ from gameObject import *
 
 pygame.init()
 
-# Constants 
+# Constants
 FPS = 30
 
 width = 928
@@ -148,15 +148,23 @@ if __name__ == "__main__":
         tank_count.append('heavy')
     enemy_on_lvl = int(enemy_count[0]) + int(enemy_count[1]) + int(
         enemy_count[2]) + int(enemy_count[3])
-    enemy_on_board = 0
+
+    # timers
     respawn_timer = 120
+    stop_timer = 0
+
     # Main game's loop
     running = True
     while running:
-        if enemy_on_board <= 4 and respawn_timer >= 120:
+        if len(enemy_group) <= 4 and respawn_timer >= 120:
             type = tank_count.pop(tank_count.index(choice(tank_count)))
-            Enemy(type)
-            enemy_on_board += 1
+            if type == 'standard' and randint(1, 5) == 1:
+                Enemy(type, True)
+            else:
+                Enemy(type)
+            respawn_timer = 0
+        respawn_timer += 1
+        shield_timer -= 1
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -193,23 +201,23 @@ if __name__ == "__main__":
         castle_flag.update()
         bullet_group.add(bullet_player_group)
         bullet_group.add(bullet_enemy_group)
+
         for water in water_group:
             water.update()
-
         for bullet in bullet_player_group:
             bullet.update()
-
         for bullet in bullet_enemy_group:
             bullet.update()
-
         for boom in boom_group:
             boom.update()
-
         for brick in brick_group:
             brick.update()
-
         for enemy in enemy_group:
             enemy.update()
+        for bonus in bonus_group:
+            bonus.update(player)
+        for shield in shield_group:
+            shield.update()
 
         screen.fill(pygame.Color("grey"))
         screen.fill(pygame.Color('black'),
@@ -220,7 +228,9 @@ if __name__ == "__main__":
         uncollide_group.draw(screen)
         water_group.draw(screen)
         player_group.draw(screen)
+        shield_group.draw(screen)
         enemy_group.draw(screen)
+        bonus_group.draw(screen)
         bullet_enemy_group.draw(screen)
         bullet_player_group.draw(screen)
         bushes_group.draw(screen)
@@ -229,3 +239,4 @@ if __name__ == "__main__":
         pygame.display.flip()
 
         clock.tick(FPS)
+
