@@ -1,6 +1,8 @@
 import pygame
-from main import load_image, player
+from main import *
 from random import choice, randint
+
+pygame.mixer.init()
 
 # Game's group
 all_sprites = pygame.sprite.Group()
@@ -87,7 +89,6 @@ enemy_images = {'btr': {'btr_u': load_image(path_to_enemy + 'btr/up.png'),
                     'bonus_r': load_image(
                         path_to_enemy + 'standard/bonus_right.png')}}
 
-
 # Game's board border
 class Border(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h, dir):
@@ -129,7 +130,6 @@ class Water(Tile):
         else:
             self.index = 0
 
-
 # Castle's flag
 class Flag(Tile):
     flag_on = load_image('other/flag_on.png')
@@ -138,7 +138,6 @@ class Flag(Tile):
     def __init__(self, posx, posy):
         super().__init__(Flag.flag_on, posx, posy, collide_group)
         self.state = 'on'
-
     def update(self):
         if pygame.sprite.spritecollideany(self, bullet_group):
             self.image = Flag.flag_off
@@ -169,23 +168,18 @@ class Brick(Tile):
 
 
 class Bonus(Tile):
-    bonus_images = {'helmet': load_image('other/bonus/helmet.png'),
-                    'clock': load_image('other/bonus/clock.png'),
-                    'shovel': load_image('other/bonus/shovel.png'),
-                    'tank': load_image('other/bonus/tank.png'),
-                    'star': load_image('other/bonus/star.png'),
-                    'grenade': load_image('other/bonus/grenade.png')}
+    bonus_images = {'helmet': load_image('other/bonus/helmet.png'), 'tank': load_image('other/bonus/tank.png'),
+                    'star': load_image('other/bonus/star.png'), 'grenade': load_image('other/bonus/grenade.png')}
 
     def __init__(self, posx, posy):
         bonus = ['helmet', 'clock', 'shovel', 'tank', 'star', 'grenade']
         self.bonus_type = choice(bonus)
-        super().__init__(Bonus.bonus_images[self.bonus_type],
-                         (posx - x_indent) // tile_width,
-                         (posy - y_indent) // tile_height,
+        super().__init__(Bonus.bonus_images[self.bonus_type], (posx - x_indent) // tile_width, (posy - y_indent) // tile_height,
                          bonus_group)
 
     def update(self, player):
         if pygame.sprite.spritecollideany(self, player_group):
+            bonus.play()
             if self.bonus_type == 'helmet':
                 player.shield = True
                 Shield(player)
@@ -284,8 +278,7 @@ class Player(Tanks):
             self.rect.topleft = (new_pos)
 
     def rotate(self):
-        self.image = player_images[
-            'lvl' + str(self.lvl) + '_' + self.direction]
+        self.image = player_images['lvl' + str(self.lvl) + '_' + self.direction]
 
 
 class Enemy(Tanks):
@@ -319,6 +312,7 @@ class Enemy(Tanks):
                         Bonus(self.rect.x, self.rect.y)
             self.hp -= 1
         if self.hp == 0:
+            explosion.play()
             self.kill()
 
         if self.step_count == 0:
@@ -327,12 +321,10 @@ class Enemy(Tanks):
 
         if self.bonus:
             if self.flash < 3:
-                self.image = enemy_images[self.type + '_bonus'][
-                    'bonus_' + self.direction]
+                self.image = enemy_images[self.type + '_bonus']['bonus_' + self.direction]
                 self.flash += 1
             elif self.flash < 6:
-                self.image = enemy_images[self.type][
-                    self.type + '_' + self.direction]
+                self.image = enemy_images[self.type][self.type + '_' + self.direction]
                 self.flash += 1
             else:
                 self.flash = 0
@@ -414,6 +406,7 @@ class Bullet(pygame.sprite.Sprite):
 
     def update(self):
         if pygame.sprite.spritecollideany(self, collide_group):
+            brick.play()
             self.boom()
         else:
             if self.direction == 'u':
@@ -473,8 +466,7 @@ class Shield(pygame.sprite.Sprite):
         super().__init__(shield_group)
         self.owner = owner
         self.image = Shield.shield_1
-        self.rect = self.image.get_rect().move(self.owner.rect.x,
-                                               self.owner.rect.y)
+        self.rect = self.image.get_rect().move(self.owner.rect.x, self.owner.rect.y)
 
     def update(self):
         self.rect.topleft = self.owner.rect.topleft
