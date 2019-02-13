@@ -1,5 +1,5 @@
 import pygame
-from main import load_image
+from main import load_image, game_over, player
 from random import choice, randint
 
 # Game's group
@@ -15,7 +15,9 @@ bushes_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
 bullet_enemy_group = pygame.sprite.Group()
 bullet_player_group = pygame.sprite.Group()
+bonus_group = pygame.sprite.Group()
 boom_group = pygame.sprite.Group()
+shield_group = pygame.sprite.Group()
 
 # Direction
 DIRECTION = ['u', 'd', 'l', 'r']  # 'u' - up, 'd' - down, 'l' - left, 'r' - r
@@ -28,7 +30,7 @@ path_to_enemy = 'tanks/enemy/'
 tile_width = 64
 tile_height = 64
 
-# Indented for objects that game were indented at the edges as in the original 
+# Indented for objects that game were indented at the edges as in the original
 x_indent = 32
 y_indent = 32
 
@@ -38,18 +40,18 @@ tile_images = {'empty': load_image('tiles/empty_block.png'),
                'bushes': load_image('tiles/bushes.png'),
                'ice': load_image('tiles/ice.png')}
 
-player_images = {'lvl1_up': load_image(path_to_player + 'lvl1/up.png'),
-                 'lvl1_down': load_image(path_to_player + 'lvl1/down.png'),
-                 'lvl1_left': load_image(path_to_player + 'lvl1/left.png'),
-                 'lvl1_right': load_image(path_to_player + 'lvl1/right.png'),
-                 'lvl2_up': load_image(path_to_player + 'lvl2/up.png'),
-                 'lvl2_down': load_image(path_to_player + 'lvl2/down.png'),
-                 'lvl2_left': load_image(path_to_player + 'lvl2/left.png'),
-                 'lvl2_right': load_image(path_to_player + 'lvl2/right.png'),
-                 'lvl3_up': load_image(path_to_player + 'lvl3/up.png'),
-                 'lvl3_down': load_image(path_to_player + 'lvl3/down.png'),
-                 'lvl3_left': load_image(path_to_player + 'lvl3/left.png'),
-                 'lvl3_right': load_image(path_to_player + 'lvl3/right.png')}
+player_images = {'lvl1_u': load_image(path_to_player + 'lvl1/up.png'),
+                 'lvl1_d': load_image(path_to_player + 'lvl1/down.png'),
+                 'lvl1_l': load_image(path_to_player + 'lvl1/left.png'),
+                 'lvl1_r': load_image(path_to_player + 'lvl1/right.png'),
+                 'lvl2_u': load_image(path_to_player + 'lvl2/up.png'),
+                 'lvl2_d': load_image(path_to_player + 'lvl2/down.png'),
+                 'lvl2_l': load_image(path_to_player + 'lvl2/left.png'),
+                 'lvl2_r': load_image(path_to_player + 'lvl2/right.png'),
+                 'lvl3_u': load_image(path_to_player + 'lvl3/up.png'),
+                 'lvl3_d': load_image(path_to_player + 'lvl3/down.png'),
+                 'lvl3_l': load_image(path_to_player + 'lvl3/left.png'),
+                 'lvl3_r': load_image(path_to_player + 'lvl3/right.png')}
 
 enemy_images = {'btr': {'btr_u': load_image(path_to_enemy + 'btr/up.png'),
                         'btr_d': load_image(path_to_enemy + 'btr/down.png'),
@@ -75,7 +77,17 @@ enemy_images = {'btr': {'btr_u': load_image(path_to_enemy + 'btr/up.png'),
                     'standard_l': load_image(
                         path_to_enemy + 'standard/left.png'),
                     'standard_r': load_image(
-                        path_to_enemy + 'standard/right.png')}}
+                        path_to_enemy + 'standard/right.png')},
+                'standard_bonus': {'bonus_u': load_image(
+                    path_to_enemy + 'standard/bonus_up.png'),
+                    'bonus_d': load_image(
+                        path_to_enemy + 'standard/bonus_down.png'),
+                    'bonus_l': load_image(
+                        path_to_enemy + 'standard/bonus_left.png'),
+                    'bonus_r': load_image(
+                        path_to_enemy + 'standard/bonus_right.png')}}
+
+# Game's board border
 
 
 class Border(pygame.sprite.Sprite):
@@ -96,7 +108,6 @@ class Tile(pygame.sprite.Sprite):
         self.image = image
         self.rect = self.image.get_rect().move(tile_width * posx + x_indent,
                                                tile_height * posy + y_indent)
-        self.mask = pygame.mask.from_surface(self.image)
 
 
 class Water(Tile):
@@ -118,6 +129,8 @@ class Water(Tile):
             self.index += 1
         else:
             self.index = 0
+
+# Castle's flag
 
 
 class Flag(Tile):
@@ -156,7 +169,38 @@ class Brick(Tile):
                 self.image = Brick.brick_images['brick_' + str(self.state)]
 
 
+class Bonus(Tile):
+    bonus_images = {'helmet': load_image('other/bonus/helmet.png'), 'clock': load_image('other/bonus/clock.png'),
+                    'shovel': load_image('other/bonus/shovel.png'), 'tank': load_image('other/bonus/tank.png'),
+                    'star': load_image('other/bonus/star.png'), 'grenade': load_image('other/bonus/grenade.png')}
+
+    def __init__(self, posx, posy):
+        bonus = ['helmet', 'clock', 'shovel', 'tank', 'star', 'grenade']
+        self.bonus_type = choice(bonus)
+        super().__init__(Bonus.bonus_images[self.bonus_type], (posx - x_indent) // tile_width, (posy - y_indent) // tile_height,
+                         bonus_group)
+
+    def update(self, player):
+        if pygame.sprite.spritecollideany(self, player_group):
+            if self.bonus_type == 'helmet':
+                player.shield = True
+                Shield(player)
+            if self.bonus_type == 'clock':
+                pass
+            if self.bonus_type == 'shovel':
+                pass
+            if self.bonus_type == 'tank':
+                player.hp += 1
+            if self.bonus_type == 'star':
+                player.lvl += 1
+            if self.bonus_type == 'grenade':
+                for enemy in enemy_group:
+                    enemy.kill()
+            self.kill()
+
 # Tanks
+
+
 class Tanks(pygame.sprite.Sprite):
     def __init__(self, image, posx, posy):
         super().__init__(all_sprites)
@@ -169,24 +213,53 @@ class Tanks(pygame.sprite.Sprite):
 
 class Player(Tanks):
     def __init__(self, posx, posy):
-        super().__init__(player_images['lvl1_up'], posx, posy)
+        super().__init__(player_images['lvl1_u'], posx, posy)
+        # Main parametres
         self.hp = 3
-        self.direction = 'u'
-        self.atack = False
         self.lvl = 1
         self.speed = 8
-        self.movement = False
-        self.add(player_group)
+        self.damage = 1
+        self.bullet_type = 'standard'
         self.atack_count = 30
+        self.direction = 'u'
+
+        # Flag for handler of a user's action
+        self.atack = False
+        self.movement = False
+
+        # For shield
+        self.shield = True
+        self.shield_timer = 0
+        Shield(self)
+
+        self.add(player_group)
 
     def update(self):
-        move_pos = (0, 0)
+        if self.shield_timer == 60:
+            self.shield = False
+            self.shield_timer = 0
+            shield_group.empty()
+
+        if self.shield:
+            self.shield_timer += 1
+
+        if pygame.sprite.spritecollideany(self, bullet_enemy_group):
+            for bullet in bullet_enemy_group:
+                if pygame.sprite.collide_rect(self, bullet):
+                    if self.shield:
+                        self.shield = False
+                    else:
+                        self.hp -= 1
+                    bullet.boom()
+        if self.hp == 0:
+            self.kill()
 
         if self.atack and self.atack_count >= 30:
-            bullet = Bullet('fast', self)
+            bullet = Bullet(self.bullet_type, self)
             self.atack_count = 0
         self.atack_count += 1
 
+        move_pos = (0, 0)
         if self.movement:
             self.rotate()
             if self.direction == 'u':
@@ -200,8 +273,10 @@ class Player(Tanks):
 
             player_rect = pygame.Rect(new_pos, [64, 64])
 
-            # collisions with tiles
+            # collisions with game's object
             if player_rect.collidelist(list(collide_group)) != -1:
+                return
+            if player_rect.collidelist(list(enemy_group)) != -1:
                 return
             if player_rect.collidelist(list(water_group)) != -1:
                 return
@@ -210,16 +285,7 @@ class Player(Tanks):
             self.rect.topleft = (new_pos)
 
     def rotate(self):
-        if self.direction == 'u':
-            self.image = player_images['lvl' + str(self.lvl) + '_up']
-        elif self.direction == 'd':
-            self.image = player_images['lvl' + str(self.lvl) + '_down']
-            self.stop = ''
-        elif self.direction == 'l':
-            self.image = player_images['lvl' + str(self.lvl) + '_left']
-            self.stop = ''
-        elif self.direction == 'r':
-            self.image = player_images['lvl' + str(self.lvl) + '_right']
+        self.image = player_images['lvl' + str(self.lvl) + '_' + self.direction]
 
 
 class Enemy(Tanks):
@@ -227,10 +293,11 @@ class Enemy(Tanks):
     speed = {'btr': 12, 'rapidfire': 8, 'standard': 8, 'heavy': 8}
     bullet_speed = {'btr': 'standard', 'rapidfire': 'fast',
                     'standard': 'standard', 'heavy': 'standard'}
-    spawn_place = [(5, 5), (5, 5), (5, 5)]
+    spawn_place = [(0, 0), (7, 0), (12, 0)]
 
-    def __init__(self, type):
+    def __init__(self, type, bonus=False):
         self.type = type
+        self.bonus = bonus
         self.direction = choice(DIRECTION)
         self.image = enemy_images[type][type + '_' + self.direction]
         posx, posy = choice(Enemy.spawn_place)
@@ -239,13 +306,35 @@ class Enemy(Tanks):
         self.speed = Enemy.speed[type]
         self.bullet_speed = Enemy.bullet_speed[type]
         self.add(enemy_group)
+        self.flash = 0
         self.step_count = 0
         self.atack_count = 30
 
     def update(self):
+        if pygame.sprite.spritecollideany(self, bullet_player_group):
+            for bullet in bullet_player_group:
+                if pygame.sprite.collide_rect(self, bullet):
+                    bullet.boom()
+                    if self.bonus:
+                        Bonus(self.rect.x, self.rect.y)
+            self.hp -= 1
+        if self.hp == 0:
+            self.kill()
+
         if self.step_count == 0:
             step_count, self.direction = self.movement_control()
         self.rotate()
+
+        if self.bonus:
+            if self.flash < 3:
+                self.image = enemy_images[self.type + '_bonus']['bonus_' + self.direction]
+                self.flash += 1
+            elif self.flash < 6:
+                self.image = enemy_images[self.type][self.type + '_' + self.direction]
+                self.flash += 1
+            else:
+                self.flash = 0
+
         if self.atack_count >= 120:
             bullet = Bullet(Enemy.bullet_speed[self.type], self)
             self.atack_count = 0
@@ -262,16 +351,7 @@ class Enemy(Tanks):
 
         enemy_rect = pygame.Rect(new_pos, [64, 64])
 
-        if enemy_rect.collidelist(list(bullet_player_group)) != -1:
-            for bullet in bullet_player_group:
-                if pygame.sprite.collide_rect(self, bullet):
-                    bullet.boom()
-            self.hp -= 1
-
-        if self.hp == 0:
-            self.kill()
-
-            # collisions with others object
+        # collisions with others object
         if enemy_rect.collidelist(list(collide_group)) != -1:
             return
         if enemy_rect.collidelist(list(player_group)) != -1:
@@ -295,13 +375,10 @@ class Enemy(Tanks):
 
 
 class Bullet(pygame.sprite.Sprite):
-    bullet_images = {'u': pygame.image.load('data/other/bullet_up.png'),
-                     'd': pygame.image.load('data/other/bullet_down.png'),
-                     'l': pygame.image.load('data/other/bullet_left.png'),
-                     'r': pygame.image.load('data/other/bullet_right.png')}
-    boom_images = [pygame.image.load('data/other/boom_1.png'),
-                   pygame.image.load('data/other/boom_2.png'),
-                   pygame.image.load('data/other/boom_3.png')]
+    bullet_images = {'u': load_image('other/bullet_up.png'),
+                     'd': load_image('other/bullet_down.png'),
+                     'l': load_image('other/bullet_left.png'),
+                     'r': load_image('other/bullet_right.png')}
 
     def __init__(self, type_1, owner):
         super().__init__(all_sprites)
@@ -352,9 +429,9 @@ class Bullet(pygame.sprite.Sprite):
 
 
 class Boom(pygame.sprite.Sprite):
-    boom_images = [pygame.image.load('data/other/boom_1.png'),
-                   pygame.image.load('data/other/boom_2.png'),
-                   pygame.image.load('data/other/boom_3.png')]
+    boom_images = [load_image('other/boom_1.png'),
+                   load_image('other/boom_2.png'),
+                   load('other/boom_3.png')]
 
     def __init__(self, posx, posy, direction):
         super().__init__(boom_group)
@@ -384,3 +461,22 @@ class Boom(pygame.sprite.Sprite):
             self.boom = 2
             self.image = Bullet.boom_images[self.boom]
             self.kill()
+
+
+class Shield(pygame.sprite.Sprite):
+    shield_1 = load_image('other/shield_1.png')
+    shield_2 = load_image('other/shield_2.png')
+
+    def __init__(self, owner):
+        print('ok')
+        super().__init__(shield_group)
+        self.owner = owner
+        self.image = Shield.shield_1
+        self.rect = self.image.get_rect().move(self.owner.rect.x, self.owner.rect.y)
+
+    def update(self):
+        self.rect.topleft = self.owner.rect.topleft
+        if (self.owner.shield_timer % 4) <= 1:
+            self.image = Shield.shield_1
+        else:
+            self.image = Shield.shield_2
