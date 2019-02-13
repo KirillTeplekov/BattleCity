@@ -25,6 +25,7 @@ fire = pygame.mixer.Sound('data/sounds/fire.ogg')
 gameover = pygame.mixer.Sound('data/sounds/gameover.ogg')
 gamestart = pygame.mixer.Sound('data/sounds/gamestart.ogg')
 
+
 # Function, which load image to sprite
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
@@ -153,7 +154,7 @@ def game_over():
     fon_sprites.add(sprite)
     sprite.rect.x = 0
     sprite.rect.y = height
-    
+
     gameover.set_volume(1)
     gameover.play()
     running = True
@@ -246,7 +247,6 @@ def generate_level(filename):
             if level[y][x] == '.':
                 Tile(tile_images['empty'], x, y, uncollide_group)
             elif level[y][x] == '#':
-
                 Brick(x, y)
             elif level[y][x] == 'c':
                 Tile(tile_images['concrete'], x, y, collide_group)
@@ -351,7 +351,7 @@ if __name__ == "__main__":
                                 player.direction = 'r'
                             elif event.key == pygame.K_SPACE:
                                 fire.set_volume(1)
-                                fire.play()                                
+                                fire.play()
                                 player.atack = True
                             elif event.key == pygame.K_ESCAPE:
                                 pause = True
