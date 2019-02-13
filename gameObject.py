@@ -39,8 +39,7 @@ y_indent = 32
 # Image dict for gameObject
 tile_images = {'empty': load_image('tiles/empty_block.png'),
                'concrete': load_image('tiles/concrete.png'),
-               'bushes': load_image('tiles/bushes.png'),
-               'ice': load_image('tiles/ice.png')}
+               'bushes': load_image('tiles/bushes.png')}
 
 player_images = {'lvl1_u': load_image(path_to_player + 'lvl1/up.png'),
                  'lvl1_d': load_image(path_to_player + 'lvl1/down.png'),
