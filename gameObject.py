@@ -100,8 +100,8 @@ class Tile(pygame.sprite.Sprite):
 
 
 class Water(Tile):
-    image_1 = pygame.image.load('data/tiles/water.png')
-    image_2 = pygame.image.load('data/tiles/water_2.png')
+    image_1 = load_image('tiles/water.png')
+    image_2 = load_image('tiles/water_2.png')
 
     def __init__(self, posx, posy):
         super().__init__(Water.image_2, posx, posy, water_group)
@@ -295,13 +295,10 @@ class Enemy(Tanks):
 
 
 class Bullet(pygame.sprite.Sprite):
-    bullet_images = {'u': pygame.image.load('data/other/bullet_up.png'),
-                     'd': pygame.image.load('data/other/bullet_down.png'),
-                     'l': pygame.image.load('data/other/bullet_left.png'),
-                     'r': pygame.image.load('data/other/bullet_right.png')}
-    boom_images = [pygame.image.load('data/other/boom_1.png'),
-                   pygame.image.load('data/other/boom_2.png'),
-                   pygame.image.load('data/other/boom_3.png')]
+    bullet_images = {'u': load_image('other/bullet_up.png'),
+                     'd': load_image('other/bullet_down.png'),
+                     'l': load_image('other/bullet_left.png'),
+                     'r': load_image('other/bullet_right.png')}
 
     def __init__(self, type_1, owner):
         super().__init__(all_sprites)
@@ -352,9 +349,9 @@ class Bullet(pygame.sprite.Sprite):
 
 
 class Boom(pygame.sprite.Sprite):
-    boom_images = [pygame.image.load('data/other/boom_1.png'),
-                   pygame.image.load('data/other/boom_2.png'),
-                   pygame.image.load('data/other/boom_3.png')]
+    boom_images = [load_image('other/boom_1.png'),
+                   load_image('other/boom_2.png'),
+                   load('other/boom_3.png')]
 
     def __init__(self, posx, posy, direction):
         super().__init__(boom_group)
