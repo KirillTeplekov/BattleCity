@@ -90,8 +90,11 @@ def start_screen():
                     screen_num = (screen_num + 1) % 2
                 sprite.image = screen_images[screen_num]
                 if event.key == pygame.K_SPACE:
-                    steel.play()
-                    return True
+                    if screen_num == 0:
+                        steel.play()
+                        return True
+                    else:
+                        terminate()
         clock.tick(60)
         all_sprites.draw(screen)
         pygame.display.flip()
